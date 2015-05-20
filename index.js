@@ -65,12 +65,18 @@ module.exports = {
 
                 var cssStr = self.concatMinifyCss(files, options.minifyCss);
                 var outFile = path.join(options.appPath, options.cssOut);
-                fs.writeFile(outFile, cssStr, function (err) {
+                fs.ensureDir(path.dirname(outFile), function (err) {
                     if (err) {
                         return callback(err);
                     }
 
-                    callback(null, { files: files, out: outFile });
+                    fs.writeFile(outFile, cssStr, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        callback(null, { files: files, out: outFile });
+                    });
                 });
             });
         });
@@ -116,11 +122,12 @@ module.exports = {
         return cssStr.replace(urlRegex, function (match, quote, img, offset, str) {
             var absoluteUrl;
 
-            if (img.substr(0, 1) === '/') { // already using absolute path
+            // already using absolute path
+            if (img.substr(0, 1) === '/') {
                 return str;
             }
 
-            return match.replace(img, (path.dirname(cssFilePath) + '/' + img));
+            return match.replace(img, (path.resolve(path.dirname(cssFilePath), img)));
         });
     },
 
