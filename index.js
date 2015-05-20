@@ -5,6 +5,7 @@ var fs = require('fs-extra');
 var lazoPath = 'node_modules/lazo';
 var requirejs = require('requirejs');
 var dir = require('node-dir');
+var CleanCss = require('clean-css');
 
 try {
     lazoPath = require.resolve('lazo');
@@ -30,10 +31,160 @@ var defaults = {
     loaders: {
         '.hbs': 'text',
         '.json': 'json'
-    }
+    },
+    cssFilter: function (file) {
+        return path.extname(file) === '.css';
+    },
+    sortCss: function (files) {
+        return files;
+    },
+    minifyCss: true,
+    cssOut: 'app/bundles/application.css'
 };
 
 module.exports = {
+
+    // CSS bundling
+    bundleCss: function (options, callback) {
+        var self = this;
+        options = _.defaults(options, defaults);
+
+        this.getCssFiles(options.appPath, options.cssFilter, function (err, files) {
+            if (err) {
+                return callback(err);
+            }
+
+            files = files.filter(function (file) {
+                return file.indexOf(options.cssOut) === -1;
+            });
+
+            self.readCssFiles(options.appPath, options.sortCss(files), function (err, files) {
+                if (err) {
+                    return callback(err);
+                }
+
+                var cssStr = self.concatMinifyCss(files, options.minifyCss);
+                var outFile = path.join(options.appPath, options.cssOut);
+                fs.writeFile(outFile, cssStr, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, { files: files, out: outFile });
+                });
+            });
+        });
+    },
+
+    concatMinifyCss: function (css, minify, callback) {
+        var cssStr = '';
+        css.forEach(function (cssDef, i) {
+            cssStr += (i ? '\n\n'  : '') + '/* ' + cssDef.path + ' */' + '\n' + cssDef.contents;
+        });
+
+        return minify ? new CleanCss().minify(cssStr).styles : cssStr;
+    },
+
+    readCssFiles: function (appPath, files, callback) {
+        var self = this;
+        var tasks = [];
+
+        files.forEach(function (file) {
+            tasks.push(function (callback) {
+                fs.readFile(path.join(appPath, file), 'utf8', function (err, cssStr) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    callback(null, { path: file, contents: self.resolveImgPaths(cssStr, file) });
+                });
+            });
+        });
+
+        async.parallel(tasks, function (err, results) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, results);
+        });
+    },
+
+    resolveImgPaths: function (cssStr, cssFilePath) {
+        var urlRegex = /(?:\@import)?\s*url\(\s*(['"]?)(\S+)\1\s*\)/g;
+
+        // set image urls to absolute paths
+        return cssStr.replace(urlRegex, function (match, quote, img, offset, str) {
+            var absoluteUrl;
+
+            if (img.substr(0, 1) === '/') { // already using absolute path
+                return str;
+            }
+
+            return match.replace(img, (path.dirname(cssFilePath) + '/' + img));
+        });
+    },
+
+    getCssFiles: function (appPath, filter, callback) {
+        var self = this;
+
+        async.parallel({
+            appCss: function (callback) {
+                fs.readJson(path.join(appPath, 'app', 'app.json'), function (err, appJson) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, appJson.css || []);
+                });
+            },
+            allCss: function (callback) {
+                dir.files(appPath, function (err, files) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, files.filter(filter));
+                });
+            }
+        }, function (err, files) {
+            if (err) {
+                return callback(err);
+            }
+            var cssFiles = _.uniq(files.appCss.concat(files.allCss).map(function (file) {
+                return file.replace(appPath, '');
+            }));
+
+            callback(null, cssFiles);
+        });
+    },
+
+    // JS bundling
+    bundleJS: function (options, callback) {
+        var self = this;
+        options = _.defaults(options, defaults);
+
+        this.copyLoaders(options.lazoPath, options.appPath, function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            self.mergeConfigs(options, function (err, config) {
+                if (err) {
+                    return callback(err);
+                }
+
+                requirejs.optimize(config, function (buildResponse) {
+                    self.removeLoaders(options.appPath, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        callback(null, { out: config.out, response: buildResponse });
+                    });
+                });
+            });
+        });
+    },
 
     copyLoaders: function (src, dest, callback) {
         var tasks = [];
@@ -87,33 +238,6 @@ module.exports = {
         });
     },
 
-    bundle: function (options, callback) {
-        var self = this;
-        options = _.defaults(options, defaults);
-
-        this.copyLoaders(options.lazoPath, options.appPath, function (err) {
-            if (err) {
-                return callback(err);
-            }
-
-            self.mergeConfigs(options, function (err, config) {
-                if (err) {
-                    return callback(err);
-                }
-
-                requirejs.optimize(config, function (buildResponse) {
-                    self.removeLoaders(options.appPath, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        callback(null, { out: config.out, response: buildResponse });
-                    });
-                });
-            });
-        });
-    },
-
     getPaths: function (lazoPath, appPath, callback) {
         this.getLazoPaths(lazoPath, function (err, lazoPaths) {
             var appConfPath = path.join(appPath, 'conf.json');
@@ -159,7 +283,7 @@ module.exports = {
         });
     },
 
-    getIncludes: function (appPath, callback) {
+    getJSIncludes: function (appPath, callback) {
         dir.files(appPath, function (err, files) {
             if (err) {
                 return callback(err);
@@ -219,7 +343,7 @@ module.exports = {
                 });
             },
             includes: function (callback) {
-                self.getIncludes(options.appPath, function (err, files) {
+                self.getJSIncludes(options.appPath, function (err, files) {
                     if (err) {
                         return callback(err);
                     }

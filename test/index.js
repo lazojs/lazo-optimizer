@@ -1,4 +1,3 @@
-require('../index').bundle({ appPath: 'application', lazoPath: '../../lazo' }, function (err, response) {
-    console.log('HELLO');
+require('../index').bundleCss({ appPath: 'application', lazoPath: '../../lazo', minifyCss: false }, function (err, response) {
     console.log(err || response);
 });

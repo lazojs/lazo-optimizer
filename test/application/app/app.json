@@ -2,5 +2,6 @@
     "routes": {
         "": "home",
         "about": "about"
-    }
+    },
+    "css": ["/app/css/layout.css", "/app/css/theme.css"]
 }

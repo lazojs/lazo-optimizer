@@ -46,6 +46,7 @@
       "fs-extra": "0.18.x",
       "node-dir": "0.1.x",
       "async": "0.9.x",
-      "requirejs": "2.1.x"
+      "requirejs": "2.1.x",
+      "clean-css": "3.2.x"
   }
 }
