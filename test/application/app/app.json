@@ -1,0 +1,6 @@
+{
+    "routes": {
+        "": "home",
+        "about": "about"
+    }
+}
