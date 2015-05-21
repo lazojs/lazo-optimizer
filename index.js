@@ -246,25 +246,55 @@ module.exports = {
     },
 
     getPaths: function (lazoPath, appPath, callback) {
-        this.getLazoPaths(lazoPath, function (err, lazoPaths) {
-            var appConfPath = path.join(appPath, 'conf.json');
+        var self = this;
 
-            fs.exists(appConfPath, function (exists) {
-                if (!exists) {
-                    return callback(null, lazoPaths);
-                }
-
-                fs.readJson(appConfPath, function (err, json) {
+        async.parallel({
+            appPaths: function (callback) {
+                self.getAppPaths(appPath, function (err, appPaths) {
                     if (err) {
                         return callback(err);
                     }
-                    var commonPaths = json.requirejs && json.requirejs.common ?
-                        json.requirejs.common : {};
-                    var clientPaths = json.requirejs && json.requirejs.client ?
-                        json.requirejs.client : {};
 
-                    callback(null, _.extend(lazoPaths, commonPaths, clientPaths));
+                    callback(null, appPaths);
                 });
+            },
+            lazoPaths: function (callback) {
+                self.getLazoPaths(lazoPath, function (err, lazoPaths) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, lazoPaths);
+                });
+            }
+
+        }, function (err, paths) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, _.extend(paths.appPaths, paths.lazoPaths));
+        });
+    },
+
+    getAppPaths: function (appPath, callback) {
+        var appConfPath = path.join(appPath, 'conf.json');
+
+        fs.exists(appConfPath, function (exists) {
+            if (!exists) {
+                return callback(null, lazoPaths);
+            }
+
+            fs.readJson(appConfPath, function (err, json) {
+                if (err) {
+                    return callback(err);
+                }
+                var commonPaths = json.requirejs && json.requirejs.common &&
+                    json.requirejs.common.paths ? json.requirejs.common.paths : {};
+                var clientPaths = json.requirejs && json.requirejs.client &&
+                    json.requirejs.client.paths ? json.requirejs.client.paths : {};
+
+                callback(null, _.extend(commonPaths, clientPaths));
             });
         });
     },
@@ -350,12 +380,52 @@ module.exports = {
                 });
             },
             includes: function (callback) {
-                self.getJSIncludes(options.appPath, function (err, files) {
+                async.waterfall([
+                    // get includes
+                    function (callback) {
+                        self.getJSIncludes(options.appPath, function (err, files) {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            var filteredFiles = options.includeFilter(files,
+                                options.includeExtensions,
+                                options.appPath,
+                                options.loaders,
+                                self.getLoaderPrefix);
+
+                            callback(null, filteredFiles);
+                        });
+                    },
+                    // replace paths with module ids
+                    function (files, callback) {
+                        self.getAppPaths(options.appPath, function (err, paths) {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            callback(null, self.replacePathsWithModuleIds(files, paths));
+                        });
+                    },
+                    // remove any 'empty:' lazo paths from includes
+                    function (files, callback) {
+                        self.getLazoPaths(options.lazoPath, function (err, paths) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            files = files.filter(function (file) {
+                                return paths[file] !== 'empty:';
+                            });
+
+                            callback(null, files);
+                        });
+                    }
+                ], function (err, includes) {
                     if (err) {
                         return callback(err);
                     }
 
-                    callback(null, files);
+                    callback(null, includes);
                 });
             }
         }, function (err, configs) {
@@ -363,10 +433,8 @@ module.exports = {
                 return callback(err);
             }
 
-            callback(null, _.merge({
-                include: options.includeFilter(configs.includes, options.includeExtensions, options.appPath, options.loaders, self.getLoaderPrefix),
+            var config = _.merge({
                 stubModules: ['text', 'json', 'l'],
-                paths: configs.paths,
                 map: {
                     '*': {
                         'l': path.normalize('loader.js')
@@ -378,7 +446,23 @@ module.exports = {
                 optimize: 'uglify2',
                 logLevel: 4,
                 out: path.join(options.appPath, 'app', 'bundles', 'application.js')
-            }, configs.lazoConf, configs.appConf));
+            }, configs.appConf, configs.lazoConf);
+
+            config.include = configs.includes;
+            config.paths = configs.paths;
+
+            callback(null, config);
+        });
+    },
+
+    replacePathsWithModuleIds: function (files, paths) {
+        var pathsAsKey = {};
+        for (var k in paths) {
+            pathsAsKey[paths[k]] = k;
+        }
+
+        return files.map(function (file) {
+            return pathsAsKey[file] || file;
         });
     },
 
