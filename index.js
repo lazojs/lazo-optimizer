@@ -487,7 +487,7 @@ module.exports = {
                 optimize: 'uglify2',
                 logLevel: 4,
                 out: path.join(options.appPath, 'app', 'bundles', 'application.js')
-            }, configs.appConf, configs.lazoConf);
+            }, configs.lazoConf, configs.appConf, options.config);
 
             config.include = configs.includes;
             config.paths = configs.paths;
