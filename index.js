@@ -381,10 +381,10 @@ module.exports = {
             },
             includes: function (callback) {
                 // 1. scan dir; filtered by extension
-                // 2. split paths; if path has a module id in it discard
+                // 2. if path has a module id discard it
                 // 3. remove anything that should be 'empty:', i.e., lazo included it
                 // 4. hookpoint for modifying includes includes, files
-                // 5. modify paths and add loader prefixes
+                // 5. exclude bundle(s)
                 async.waterfall([
                     function (callback) {
                         async.parallel({
@@ -446,7 +446,6 @@ module.exports = {
                             callback(null, filtered, includes, paths);
                         });
                     },
-                    // !!!DANGER!!! is this necessary? should we even do this?
                     function (includes, files, paths, callback) {
                         var idsByPath = {};
 
@@ -487,7 +486,6 @@ module.exports = {
                 baseUrl: options.appPath,
                 optimize: 'uglify2',
                 logLevel: 4,
-                wrapShim: true,
                 out: path.join(options.appPath, 'app', 'bundles', 'application.js')
             }, configs.appConf, configs.lazoConf);
 
