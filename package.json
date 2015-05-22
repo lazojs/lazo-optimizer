@@ -1,7 +1,7 @@
 {
   "name": "lazo-optimizer",
   "description": "Runs the RequireJS optimizer using Lazo configuration and loaders",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "keywords": [
     "lazojs",
