@@ -1,0 +1,52 @@
+{
+  "name": "lazo-optimizer",
+  "description": "Runs the RequireJS optimizer using Lazo configuration and loaders",
+  "version": "0.0.1",
+  "main": "index.js",
+  "keywords": [
+    "lazojs",
+    "build",
+    "optimizer",
+    "RequireJS"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/lazojs/lazo-optimizer/blob/master/LICENSE"
+    }
+  ],
+  "author": {
+    "name": "Jason Strimpel",
+    "email": "jstrimpel@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/lazojs/lazo-optimizer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lazojs/lazo-optimizer.git"
+  },
+  "github": "https://github.com/lazojs/lazo-optimizer",
+  "scripts": {
+    "test": "gulp ci"
+  },
+  "maintainers": [
+    {
+      "name": "Jason Strimpel",
+      "email": "jstrimpel@gmail.com"
+    }
+  ],
+  "devDependencies": {
+    "gulp": "3.8.8",
+    "gulp-mocha": "1.0.0",
+    "chai": "1.9.1"
+  },
+  "dependencies": {
+      "lodash": "3.9.x",
+      "fs-extra": "0.18.x",
+      "node-dir": "0.1.x",
+      "async": "0.9.x",
+      "requirejs": "2.1.x",
+      "clean-css": "3.2.x"
+  }
+}
