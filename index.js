@@ -485,9 +485,9 @@ module.exports = {
                 outFileName: 'application.js',
                 mainConfigFile: '',
                 baseUrl: options.appPath,
-                // optimize: 'uglify2',
-                optimize: 'none',
+                optimize: 'uglify2',
                 logLevel: 4,
+                wrapShim: true,
                 out: path.join(options.appPath, 'app', 'bundles', 'application.js')
             }, configs.appConf, configs.lazoConf);
 
