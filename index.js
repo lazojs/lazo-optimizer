@@ -18,14 +18,8 @@ var defaults = {
     lazoPath: lazoPath,
     appPath: '.',
     config: {},
-    includeFilter: function (files, extensions, appPath, loaders, loaderResolver) {
-        return files.filter(function (filePath) {
-            return _.contains(extensions, path.extname(filePath));
-        }).map(function (filePath) {
-            var relativePath = filePath.replace(appPath + path.sep, '');
-            return path.extname(relativePath) === '.js' ?
-                relativePath.substr(0, relativePath.lastIndexOf('.js')) : loaderResolver(relativePath, loaders);
-        });
+    jsFilter: function (includes, files, paths) {
+        return includes;
     },
     includeExtensions: ['.hbs', '.json', '.js'],
     loaders: {
@@ -39,7 +33,12 @@ var defaults = {
         return files;
     },
     minifyCss: true,
-    cssOut: 'app/bundles/application.css'
+    cssOut: 'app/bundles/application.css',
+    excludeBundles: function (files) {
+        return files.filter(function (file) {
+            return file.indexOf('app/bundles/') === -1;
+        });
+    }
 };
 
 module.exports = {
@@ -273,7 +272,8 @@ module.exports = {
                 return callback(err);
             }
 
-            callback(null, _.extend(paths.appPaths, paths.lazoPaths));
+            // do NOT allow the overriding of jQuery; we should be namespacing lazo modules!!!
+            callback(null, _.extend(paths.lazoPaths, _.omit(paths.appPaths, 'jquery')));
         });
     },
 
@@ -380,51 +380,93 @@ module.exports = {
                 });
             },
             includes: function (callback) {
+                // 1. scan dir; filtered by extension
+                // 2. split paths; if path has a module id in it discard
+                // 3. remove anything that should be 'empty:', i.e., lazo included it
+                // 4. hookpoint for modifying includes includes, files
+                // 5. modify paths and add loader prefixes
                 async.waterfall([
-                    // get includes
                     function (callback) {
-                        self.getJSIncludes(options.appPath, function (err, files) {
-                            if (err) {
-                                return callback(err);
+                        async.parallel({
+                            paths: function (callback) {
+                                self.getPaths(options.lazoPath, options.appPath, function (err, paths) {
+                                    if (err) {
+                                        return callback(err);
+                                    }
+
+                                    callback(null, paths);
+                                });
+                            },
+                            includes: function (callback) {
+                                self.getJSIncludes(options.appPath, function (err, files) {
+                                    if (err) {
+                                        return callback(err);
+                                    }
+
+                                    function addLoaderPrefix(include, ext) {
+                                        return options.loaders[ext] + '!' + include;
+                                    }
+
+                                    files = files.filter(function (file) {
+                                        return options.includeExtensions.indexOf(path.extname(file)) !== -1;
+                                    }).map(function (include) {
+                                        var relativePath = include.replace(options.appPath + path.sep, '');
+                                        var extension = path.extname(relativePath);
+                                        return extension === '.js' ?
+                                            relativePath.substr(0, relativePath.lastIndexOf('.js')) : addLoaderPrefix(relativePath, extension);
+                                    });
+
+                                    callback(null, files);
+                                });
                             }
+                        }, function (err, results) {
+                                if (err) {
+                                    return callback(err);
+                                }
 
-                            var filteredFiles = options.includeFilter(files,
-                                options.includeExtensions,
-                                options.appPath,
-                                options.loaders,
-                                self.getLoaderPrefix);
-
-                            callback(null, filteredFiles);
+                                callback(null, results.includes, results.paths);
                         });
                     },
-                    // replace paths with module ids
-                    function (files, callback) {
-                        self.getAppPaths(options.appPath, function (err, paths) {
-                            if (err) {
-                                return callback(err);
-                            }
+                    function (includes, paths, callback) {
+                        self.getPaths(options.lazoPath, options.appPath, function (err, paths) {
+                            var idsByPath = {};
+                            var filtered;
 
-                            callback(null, self.replacePathsWithModuleIds(files, paths));
-                        });
-                    },
-                    // remove any 'empty:' lazo paths from includes
-                    function (files, callback) {
-                        self.getLazoPaths(options.lazoPath, function (err, paths) {
-                            if (err) {
-                                return callback(err);
+                            for (var k in paths) {
+                                idsByPath[paths[k]] = k;
                             }
-                            files = files.filter(function (file) {
-                                return paths[file] !== 'empty:';
+                            filtered = includes.filter(function (include) {
+                                var extension = path.extname(include);
+                                var modulePath = extension === '.js' ? include.substr(0, include.lastIndexOf('.js')) :
+                                    include;
+
+                                return !idsByPath[modulePath];
                             });
 
-                            callback(null, files);
+                            callback(null, filtered, includes, paths);
                         });
+                    },
+                    // !!!DANGER!!! is this necessary? should we even do this?
+                    function (includes, files, paths, callback) {
+                        var idsByPath = {};
+
+                        for (var k in paths) {
+                            idsByPath[paths[k]] = k;
+                        }
+
+                        includes = includes.filter(function (include) {
+                            return idsByPath[include] !== 'empty:';
+                        });
+
+                        callback(null, includes, files, paths);
+                    },
+                    function (includes, files, paths, callback) {
+                        callback(null, options.jsFilter(includes, files, paths), files, paths);
+                    },
+                    function (includes, files, paths, callback) {
+                        callback(null, options.excludeBundles(includes));
                     }
                 ], function (err, includes) {
-                    if (err) {
-                        return callback(err);
-                    }
-
                     callback(null, includes);
                 });
             }
@@ -443,7 +485,8 @@ module.exports = {
                 outFileName: 'application.js',
                 mainConfigFile: '',
                 baseUrl: options.appPath,
-                optimize: 'uglify2',
+                // optimize: 'uglify2',
+                optimize: 'none',
                 logLevel: 4,
                 out: path.join(options.appPath, 'app', 'bundles', 'application.js')
             }, configs.appConf, configs.lazoConf);
@@ -455,14 +498,14 @@ module.exports = {
         });
     },
 
-    replacePathsWithModuleIds: function (files, paths) {
+    removePathsWithModuleIds: function (files, paths, exclude) {
         var pathsAsKey = {};
         for (var k in paths) {
             pathsAsKey[paths[k]] = k;
         }
 
-        return files.map(function (file) {
-            return pathsAsKey[file] || file;
+        return files.filter(function (file) {
+            return !pathsAsKey[file];
         });
     },
 
