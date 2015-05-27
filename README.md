@@ -3,31 +3,15 @@ The lazo-optimizer was designed to bundle Lazo application JavaScript and CSS. T
 creates a single bundle for JavaScript and single bundle for CSS. There are also a number of utility functions
 that can be leveraged to support custom bundling.
 
-## JavaScript Bundling
-The primary interface for bundling JavaScript is the `bundleJS` function:
+* [Default Options](default-options)
+* [JavaScript Bundling](javaccript-bundling)
+* [CSS Bundling](css-bundling)
 
-```javascript
-var optimizer = require('lazo-optimizer');
+## Default Options
 
-optimizer.bundleJS({
-    appPath: 'path/to/your/application'
-}, function (err, buildResponse) {
-    if (err) {
-        throw err;
-    }
-
-    console.log(buildResponse);
-});
-```
-
-> `bundleJS` delgates to the
-[Require.js optimizer](http://requirejs.org/docs/optimization.html) using a default configuration. Any configuration
-values can be overriden to handle your specific use case. Please defer to
-[Require.js optimizer](http://requirejs.org/docs/optimization.html) documentaton for further help.
-
-### Default Options
-
-The default options for `bundleJS` and all functions that accept an `options` object are:
+The default options for [`bundleJS`](#javascript-bundling),
+[`bundleCSS`](lazo-optimizer#css-bundling), and all functions that accept an `options`
+object are:
 
 ```javascript
     // the path to lazo; used to get the requirejs config for lazo
@@ -65,6 +49,28 @@ The default options for `bundleJS` and all functions that accept an `options` ob
             return file.indexOf('app/bundles/') === -1;
         });
     }
+```
+
+## JavaScript Bundling
+The primary interface for bundling JavaScript is the `bundleJS` function:
+
+> `bundleJS` delgates to the
+[Require.js optimizer](http://requirejs.org/docs/optimization.html) using a default configuration. Any configuration
+values can be overriden to handle your specific use case. Please defer to
+[Require.js optimizer](http://requirejs.org/docs/optimization.html) documentaton for further help.
+
+```javascript
+var optimizer = require('lazo-optimizer');
+
+optimizer.bundleJS({
+    appPath: 'path/to/your/application'
+}, function (err, buildResponse) {
+    if (err) {
+        throw err;
+    }
+
+    console.log(buildResponse);
+});
 ```
 
 ### JavaScript Bundling Utilities
@@ -134,7 +140,7 @@ Prefixes file path with loader, e.g., `text!app/app.json`, if required.
 Gets the default configuration for the Require.js optimizer.
 
 ##### Arguments
-1. `options` *(Object)*: Overrides for [default options](#Default-Options).
+1. `options` *(Object)*: Overrides for [default options](#default-options).
 1. `callback` *(Function)*: Function to be executed once the configuration has been generated.
 
 #### `removePathsWithModuleIds: function (files, paths)`
@@ -151,7 +157,7 @@ Removes files from the includes that have a module id in the paths configuration
 Merges the default configuration with an overrides in `options.config`.
 
 ##### Arguments
-1. `options` *(Object)*: Overrides for [default options](#Default-Options).
+1. `options` *(Object)*: Overrides for [default options](#default-options).
 1. `callback` *(Function)*: Function to be executed once the configuration has been merged.
 
 ## CSS Bundling
@@ -173,7 +179,7 @@ optimizer.bundleCss({
 
 ### Default Options
 The default options for `bundleCss` and all functions that accept an `options` object
-are defined [here](#Default-Options).
+are defined [here](#default-options).
 
 ### CSS Bundling Utilities
 CSS bundling related utilities.
@@ -212,5 +218,5 @@ Gets the CSS file paths for an application.
 ##### Arguments
 1. `appPath` *(String)*: Path to the application directory.
 1. `filter` *(Function)*: Filter files read from the application directory. See
-   [`options.cssFilter`](#Default-Options) for an example.
+   [`options.cssFilter`](#default-options) for an example.
 1. `callback` *(Function)*: Function to be executed once the CSS files paths been read.
