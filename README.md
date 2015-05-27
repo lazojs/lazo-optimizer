@@ -4,7 +4,7 @@ creates a single bundle for JavaScript and single bundle for CSS. There are also
 that can be leveraged to support custom bundling.
 
 * [Default Options](#default-options)
-* [JavaScript Bundling](#javaccript-bundling)
+* [JavaScript Bundling](#javascript-bundling)
 * [CSS Bundling](#css-bundling)
 * [Combo Handler](#combo-handler)
 
@@ -63,6 +63,7 @@ values can be overriden to handle your specific use case. Please defer to
 ```javascript
 var optimizer = require('lazo-optimizer');
 
+// arguments: options object and callback
 optimizer.bundleJS({
     appPath: 'path/to/your/application'
 }, function (err, buildResponse) {
@@ -167,6 +168,7 @@ The primary interface for bundling CSS is the `bundleCss` function:
 ```javascript
 var optimizer = require('lazo-optimizer');
 
+// arguments: options object and callback
 optimizer.bundleCss({
     appPath: 'path/to/your/application'
 }, function (err, buildResponse) {
