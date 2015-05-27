@@ -496,7 +496,7 @@ module.exports = {
         });
     },
 
-    removePathsWithModuleIds: function (files, paths, exclude) {
+    removePathsWithModuleIds: function (files, paths) {
         var pathsAsKey = {};
         for (var k in paths) {
             pathsAsKey[paths[k]] = k;
