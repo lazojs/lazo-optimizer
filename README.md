@@ -3,9 +3,10 @@ The lazo-optimizer was designed to bundle Lazo application JavaScript and CSS. T
 creates a single bundle for JavaScript and single bundle for CSS. There are also a number of utility functions
 that can be leveraged to support custom bundling.
 
-* [Default Options](default-options)
-* [JavaScript Bundling](javaccript-bundling)
-* [CSS Bundling](css-bundling)
+* [Default Options](#default-options)
+* [JavaScript Bundling](#javaccript-bundling)
+* [CSS Bundling](#css-bundling)
+* [Combo Handler](#combo-handler)
 
 ## Default Options
 
@@ -220,3 +221,30 @@ Gets the CSS file paths for an application.
 1. `filter` *(Function)*: Filter files read from the application directory. See
    [`options.cssFilter`](#default-options) for an example.
 1. `callback` *(Function)*: Function to be executed once the CSS files paths been read.
+
+## Combo Handler
+An application must define a combo handler in order to take advantage of the bundles:
+
+> To turn off combo handling set a the `development=1` cookie,
+`javascript:document.cookie="development=1"`.
+
+```javascript
+// app/bundle.js
+// https://github.com/lazojs/lazo/wiki/Combo-Handling
+define(['lazoBundle'], function (LazoBundler) {
+
+    'use strict';
+
+    return LazoBundler.extend({
+
+        response: function (route, uri, options) {
+            options.success({
+                js: ['app/bundles/application'],
+                css: ['/app/bundles/application.css']
+            });
+        }
+
+    });
+
+});
+```
