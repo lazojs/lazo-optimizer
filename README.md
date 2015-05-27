@@ -1,8 +1,7 @@
 # lazo-optimizer
 The lazo-optimizer was designed to bundle Lazo application JavaScript and CSS. The default implementation
 creates a single bundle for JavaScript and single bundle for CSS. There are also a number of utility functions
-that can be leveraged to support your own bundling build processes. The default configuration for the Require.js
-optimizer can also be overridden.
+that can be leveraged to support custom bundling.
 
 ## JavaScript Bundling
 The primary interface for bundling JavaScript is the `bundleJS` function:
@@ -10,7 +9,7 @@ The primary interface for bundling JavaScript is the `bundleJS` function:
 ```javascript
 var optimizer = require('lazo-optimizer');
 
-optimizer({
+optimizer.bundleJS({
     appPath: 'path/to/your/application'
 }, function (err, buildResponse) {
     if (err) {
@@ -20,6 +19,11 @@ optimizer({
     console.log(buildResponse);
 });
 ```
+
+> `bundleJS` delgates to the
+[Require.js optimizer](http://requirejs.org/docs/optimization.html) using a default configuration. Any configuration
+values can be overriden to handle your specific use case. Please defer to
+[Require.js optimizer](http://requirejs.org/docs/optimization.html) documentaton for further help.
 
 ### Default Options
 
@@ -149,3 +153,64 @@ Merges the default configuration with an overrides in `options.config`.
 ##### Arguments
 1. `options` *(Object)*: Overrides for [default options](#Default-Options).
 1. `callback` *(Function)*: Function to be executed once the configuration has been merged.
+
+## CSS Bundling
+The primary interface for bundling CSS is the `bundleCss` function:
+
+```javascript
+var optimizer = require('lazo-optimizer');
+
+optimizer.bundleCss({
+    appPath: 'path/to/your/application'
+}, function (err, buildResponse) {
+    if (err) {
+        throw err;
+    }
+
+    console.log(buildResponse);
+});
+```
+
+### Default Options
+The default options for `bundleCss` and all functions that accept an `options` object
+are defined [here](#Default-Options).
+
+### CSS Bundling Utilities
+CSS bundling related utilities.
+
+*Note - All callbacks return `err`, `[results]`.*
+
+#### `concatMinifyCss(css, minify, callback)`
+Concat and optionally minify CSS.
+
+##### Arguments
+1. `css` *(Array)*: Contains CSS definitions, `{ path: 'path/to/css/file.css', contents: 'css file contents' }`.
+1. `minify` *(Boolean)*: Minify the CSS.
+1. `callback` *(Function)*: Function to be executed once the CSS has been concatenated and optionally minified.
+
+#### `readCssFiles(appPath, files, callback)`
+Reads CSS files.
+
+##### Arguments
+1. `appPath` *(String)*: Path to the application directory.
+1. `files` *(Array)*: File paths for CSS files to be read.
+1. `callback` *(Function)*: Function to be executed once the CSS files have been read.
+
+#### `resolveImgPaths(cssStr, cssFilePath)`
+Resolves image URLs is CSS files to absolute paths for an application.
+
+##### Arguments
+1. `CssStr` *(String)*: CSS file contents.
+1. `cssFilePath` *(Object)*: CSS file path relative to the application.
+
+##### Returns
+*(String)*: CSS file contents with modified image URLs.
+
+#### `getCssFiles(appPath, filter, callback)`
+Gets the CSS file paths for an application.
+
+##### Arguments
+1. `appPath` *(String)*: Path to the application directory.
+1. `filter` *(Function)*: Filter files read from the application directory. See
+   [`options.cssFilter`](#Default-Options) for an example.
+1. `callback` *(Function)*: Function to be executed once the CSS files paths been read.
