@@ -1,0 +1,14 @@
+{
+    "requirejs": {
+        "common": {
+            "paths": {
+                "foo": "app/foo"
+            }
+        },
+        "client": {
+            "paths": {
+                "bar": "app/bar"
+            }
+        }
+    }
+}

@@ -8,7 +8,7 @@ var dir = require('node-dir');
 var CleanCss = require('clean-css');
 
 try {
-    lazoPath = require.resolve('lazo');
+    lazoPath = path.dirname(require.resolve('lazo'));
 } catch (e) {
     // swallow the "error"; user should define the path
     // to lazo if it cannot be resolved
@@ -81,7 +81,7 @@ module.exports = {
         });
     },
 
-    concatMinifyCss: function (css, minify, callback) {
+    concatMinifyCss: function (css, minify) {
         var cssStr = '';
         css.forEach(function (cssDef, i) {
             cssStr += (i ? '\n\n'  : '') + '/* ' + cssDef.path + ' */' + '\n' + cssDef.contents;
@@ -282,7 +282,7 @@ module.exports = {
 
         fs.exists(appConfPath, function (exists) {
             if (!exists) {
-                return callback(null, lazoPaths);
+                return callback(null);
             }
 
             fs.readJson(appConfPath, function (err, json) {
@@ -336,7 +336,8 @@ module.exports = {
 
     getLoaderPrefix: function (filePath, loaders) {
         var ext = path.extname(filePath);
-        return loaders[ext] + '!' + filePath;
+        return loaders[ext] ? loaders[ext] + '!' + filePath :
+            filePath;
     },
 
     getDefaultConfig: function (options, callback) {
@@ -493,17 +494,6 @@ module.exports = {
             config.paths = configs.paths;
 
             callback(null, config);
-        });
-    },
-
-    removePathsWithModuleIds: function (files, paths) {
-        var pathsAsKey = {};
-        for (var k in paths) {
-            pathsAsKey[paths[k]] = k;
-        }
-
-        return files.filter(function (file) {
-            return !pathsAsKey[file];
         });
     },
 

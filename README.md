@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/lazojs/lazo-optimizer.svg?branch=master)](https://travis-ci.org/lazojs/lazo-optimizer)
+
 # lazo-optimizer
 The lazo-optimizer was designed to bundle Lazo application JavaScript and CSS. The default implementation
 creates a single bundle for JavaScript and single bundle for CSS. There are also a number of utility functions
@@ -230,9 +232,11 @@ An application must define a combo handler in order to take advantage of the bun
 > To turn off combo handling set a the `development=1` cookie,
 `javascript:document.cookie="development=1"`.
 
+Fore more information about combo handling and `LazoBundle` please refer to the lazo
+[wiki](https://github.com/lazojs/lazo/wiki/Combo-Handling).
+
 ```javascript
 // app/bundle.js
-// https://github.com/lazojs/lazo/wiki/Combo-Handling
 define(['lazoBundle'], function (LazoBundler) {
 
     'use strict';

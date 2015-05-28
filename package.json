@@ -1,7 +1,7 @@
 {
   "name": "lazo-optimizer",
   "description": "Runs the RequireJS optimizer using Lazo configuration and loaders",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "index.js",
   "keywords": [
     "lazojs",
@@ -37,9 +37,10 @@
     }
   ],
   "devDependencies": {
-    "gulp": "3.8.8",
-    "gulp-mocha": "1.0.0",
-    "chai": "1.9.1"
+    "gulp": "3.8.x",
+    "gulp-mocha": "2.1.x",
+    "chai": "2.3.x",
+    "lazo": "2.2.7-alpha"
   },
   "dependencies": {
       "lodash": "3.9.x",
