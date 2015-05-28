@@ -81,7 +81,7 @@ module.exports = {
         });
     },
 
-    concatMinifyCss: function (css, minify, callback) {
+    concatMinifyCss: function (css, minify) {
         var cssStr = '';
         css.forEach(function (cssDef, i) {
             cssStr += (i ? '\n\n'  : '') + '/* ' + cssDef.path + ' */' + '\n' + cssDef.contents;

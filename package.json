@@ -37,9 +37,10 @@
     }
   ],
   "devDependencies": {
-    "gulp": "3.8.8",
-    "gulp-mocha": "1.0.0",
-    "chai": "1.9.1"
+    "gulp": "3.8.x",
+    "gulp-mocha": "2.1.x",
+    "chai": "2.3.x",
+    "lazo": "2.2.7-alpha"
   },
   "dependencies": {
       "lodash": "3.9.x",

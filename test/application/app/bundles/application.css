@@ -1,0 +1,1 @@
+body{height:100%;background:url(/app/css/img/foo.png)#fff}[lazo-cmp-name="a"] .grid-view{background:#ccc}[lazo-cmp-name="a"] .default-view{background:#eee}[lazo-cmp-name="a"] .list-view{background:#aaa}[lazo-cmp-name="b"] .grid-view{background:red}[lazo-cmp-name="b"] .default-view{background:#ddd}[lazo-cmp-name="b"] .list-view{background:#fff}
