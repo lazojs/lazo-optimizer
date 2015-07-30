@@ -156,8 +156,9 @@ module.exports = {
             if (err) {
                 return callback(err);
             }
+            var regex = new RegExp('^' + appPath);
             var cssFiles = _.uniq(files.appCss.concat(files.allCss).map(function (file) {
-                return file.replace(appPath, '');
+                return file.replace(regex, '');
             }));
 
             callback(null, cssFiles);
