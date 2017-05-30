@@ -45,7 +45,7 @@
   "dependencies": {
       "lodash": "3.9.x",
       "fs-extra": "0.18.x",
-      "node-dir": "0.1.x",
+      "node-dir": "0.1.16",
       "async": "0.9.x",
       "requirejs": "2.1.x",
       "clean-css": "3.2.x"
