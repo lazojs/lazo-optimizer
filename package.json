@@ -1,7 +1,7 @@
 {
   "name": "lazo-optimizer",
   "description": "Runs the RequireJS optimizer using Lazo configuration and loaders",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "index.js",
   "keywords": [
     "lazojs",
@@ -43,11 +43,11 @@
     "lazo": "2.2.7-alpha"
   },
   "dependencies": {
-      "lodash": "3.9.x",
-      "fs-extra": "0.18.x",
-      "node-dir": "0.1.16",
-      "async": "0.9.x",
-      "requirejs": "2.1.x",
-      "clean-css": "3.2.x"
+    "lodash": "3.9.x",
+    "fs-extra": "0.18.x",
+    "node-dir": "0.1.16",
+    "async": "0.9.x",
+    "requirejs": "2.1.x",
+    "clean-css": "3.2.x"
   }
 }
