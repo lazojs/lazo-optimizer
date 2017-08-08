@@ -87,7 +87,9 @@ module.exports = {
             cssStr += (i ? '\n\n'  : '') + '/* ' + cssDef.path + ' */' + '\n' + cssDef.contents;
         });
 
-        return minify ? new CleanCss().minify(cssStr).styles : cssStr;
+        return minify ? new CleanCss({
+            target: './'
+        }).minify(cssStr).styles : cssStr;
     },
 
     readCssFiles: function (appPath, files, callback) {
